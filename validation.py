@@ -30,9 +30,7 @@ class TargetController(Sofa.Core.Controller):
 def createScene(rootnode):
     from utils.header import addHeader, addSolvers
     from parts.controllers.assemblycontroller import AssemblyController
-    from parts.emio import Emio, getParserArgs
-
-    args = getParserArgs()
+    from parts.emio import Emio
 
     settings, modelling, simulation = addHeader(rootnode, inverse=True)
 
