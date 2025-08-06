@@ -2,6 +2,7 @@
 from modules.targets import Targets
 import Sofa
 import csv
+import numpy as np
 
 resultsDirectory = "data/results/"
 
@@ -10,6 +11,7 @@ class TargetController(Sofa.Core.Controller):
     """
         A Controller to change the target of Emio, and save the collected data in a CSV file.
 
+        emio: Sofa node of Emio
         target: Sofa node containing a MechanicalObject with the targets position
         effector: PositionEffector component
         assembly: Controller component for the assembly of Emio (set up animation of the legs and center part)
@@ -26,6 +28,7 @@ class TargetController(Sofa.Core.Controller):
 
         self.effector = effector
         self.assembly = assembly
+        self.firstTargetReached = False
 
         self.animationSteps = steps 
         self.animationStep = self.animationSteps
@@ -35,7 +38,11 @@ class TargetController(Sofa.Core.Controller):
         """
             Change the target when it's time
         """
-        if self.assembly.done:
+        delta = np.array(self.emio.effector.getMechanicalState().position.value[0][0:3]) - np.array(self.targetsPosition[self.targetIndex])
+        if np.linalg.norm(delta) < 1:
+            self.firstTargetReached = True
+
+        if self.assembly.done and self.firstTargetReached:
             self.animationStep -= 1
             if self.targetIndex >= 0 and self.animationStep == 0:
                 self.writeToCSVFile()
@@ -50,7 +57,7 @@ class TargetController(Sofa.Core.Controller):
         legname = self.emio.legsName[0]
         with open(resultsDirectory+legname+'Sphere.csv', 'w', newline='') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=';')
-            spamwriter.writerow(["Target", "Simulation"])
+            spamwriter.writerow(["Target", "Simulation", "DepthCamera", "Polhemus"])
 
     def writeToCSVFile(self):
         """
@@ -60,7 +67,9 @@ class TargetController(Sofa.Core.Controller):
         with open(resultsDirectory+legname+'Sphere.csv', 'a', newline='') as csvfile:
             spamwriter = csv.writer(csvfile, delimiter=';')
             spamwriter.writerow([self.targetsPosition[self.targetIndex], 
-                                 self.emio.effector.getMechanicalState().position.value[0][0:3]])
+                                 self.emio.effector.getMechanicalState().position.value[0][0:3],
+                                 self.emio.getRoot().DepthCamera.getMechanicalState().position.value[0][0:3],
+                                 [0., 0., 0.]]) # Todo: add polhemus position
 
 
 def createScene(rootnode):
@@ -69,6 +78,7 @@ def createScene(rootnode):
     """
     from utils.header import addHeader, addSolvers
     from parts.controllers.assemblycontroller import AssemblyController
+    from parts.controllers.trackercontroller import DotTracker
     from parts.emio import Emio
 
     settings, modelling, simulation = addHeader(rootnode, inverse=True)
@@ -93,27 +103,35 @@ def createScene(rootnode):
     assembly = AssemblyController(emio)
     emio.addObject(assembly)
 
+    # Generation of the targets
+    spherePositions = Targets(ratio=0.1, center=[0, -130, 0], size=80).sphere()
+    sphere = modelling.addChild("SphereTargets")
+    sphere.addObject("MechanicalObject", position=spherePositions, showObject=True, showObjectScale=10, drawMode=0)
+
     # Effector
     emio.effector.addObject("MechanicalObject", template="Rigid3", position=[0, 0, 0, 0, 0, 0, 1])
     emio.effector.addObject("RigidMapping", index=0)
 
     # Inverse components and GUI
-    emio.addInverseComponentAndGUI([0, 0, 0, 0, 0, 0, 1], withGUI=False)
-    emio.effector.EffectorCoord.maxSpeed.value = 50 # Limit the speed of the effector's motion
+    emio.addInverseComponentAndGUI(spherePositions[-1] + [0, 0, 0, 1], withGUI=False)
+    emio.effector.EffectorCoord.maxSpeed.value = 100 # Limit the speed of the effector's motion
 
     # Components for the connection to the real robot 
     emio.addConnectionComponents()
-
-    # Generation of the targets
-    spherePositions = Targets(ratio=0.1, center=[0, -130, 0], size=80).sphere()
-    sphere = modelling.addChild("SphereTargets")
-    sphere.addObject("MechanicalObject", position=spherePositions, showObject=True, showObjectScale=10, drawMode=0)
 
     # We add a controller to go through the targets
     rootnode.addObject(TargetController(emio=emio,
                                         target=sphere, 
                                         effector=emio.effector.EffectorCoord, 
                                         assembly=assembly,
-                                        steps=100))
+                                        steps=25))
+    
+    # Add depth camera tracker (distributed with Emio) 
+    rootnode.addObject(DotTracker(name="DotTracker",
+                                  root=rootnode,
+                                  configuration="extended",
+                                  nb_tracker=1, # We only look for one marker
+                                  show_video_feed=True,
+                                  track_colors=True)) # We track the color of the marker (green by default)
 
     return rootnode
