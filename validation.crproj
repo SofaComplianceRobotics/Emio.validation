@@ -36,6 +36,9 @@ dockId = 5
 
 [Window.       Scene Graph]
 open = false
+width = 858.000000
+height = 1615.000000
+dockId = 3
 
 
 [Window.       Log]

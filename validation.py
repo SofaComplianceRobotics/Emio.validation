@@ -1,33 +1,72 @@
 
 from modules.targets import Targets
 import Sofa
+import csv
+
+resultsDirectory = "data/results/"
 
 
 class TargetController(Sofa.Core.Controller):
+    """
+        A Controller to change the target of Emio, and save the collected data in a CSV file.
 
-    def __init__(self, target, effector, assembly):
+        target: Sofa node containing a MechanicalObject with the targets position
+        effector: PositionEffector component
+        assembly: Controller component for the assembly of Emio (set up animation of the legs and center part)
+        steps: number of simulation steps to wait before going to the next target  
+    """
+
+    def __init__(self, emio, target, effector, assembly, steps=20):
         Sofa.Core.Controller.__init__(self)
         self.name="TargetController"
 
-        self.positions = target.getMechanicalState().position.value
-        self.steps = len(self.positions)
+        self.emio = emio
+        self.targetsPosition = target.getMechanicalState().position.value
+        self.targetIndex = len(self.targetsPosition) - 1
+
         self.effector = effector
         self.assembly = assembly
 
-        self.animationSteps = 20 # Number of steps before going to the next target
+        self.animationSteps = steps 
         self.animationStep = self.animationSteps
+        self.createCSVFile()
 
     def onAnimateBeginEvent(self, _):
-
+        """
+            Change the target when it's time
+        """
         if self.assembly.done:
             self.animationStep -= 1
-            if self.steps >= 0 and self.animationStep == 0:
-                self.steps -= 1
+            if self.targetIndex >= 0 and self.animationStep == 0:
+                self.writeToCSVFile()
+                self.targetIndex -= 1
                 self.animationStep = self.animationSteps
-                self.effector.effectorGoal = [list(self.positions[self.steps]) + [0, 0, 0, 1]]
+                self.effector.effectorGoal = [list(self.targetsPosition[self.targetIndex]) + [0, 0, 0, 1]]
+
+    def createCSVFile(self):
+        """
+            Clear or create the csv file in which we'll save the data
+        """
+        legname = self.emio.legsName[0]
+        with open(resultsDirectory+legname+'Sphere.csv', 'w', newline='') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=';')
+            spamwriter.writerow(["Target", "Simulation"])
+
+    def writeToCSVFile(self):
+        """
+            Save the data in a csv file
+        """
+        legname = self.emio.legsName[0]
+        with open(resultsDirectory+legname+'Sphere.csv', 'a', newline='') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter=';')
+            spamwriter.writerow([self.targetsPosition[self.targetIndex], 
+                                 self.emio.effector.getMechanicalState().position.value[0][0:3]])
 
 
 def createScene(rootnode):
+    """
+        Emio simulation
+    """
     from utils.header import addHeader, addSolvers
     from parts.controllers.assemblycontroller import AssemblyController
     from parts.emio import Emio
@@ -39,7 +78,6 @@ def createScene(rootnode):
     addSolvers(simulation)
 
     # Add Emio to the scene
-    # The args are set from introduction.md 
     emio = Emio(name="Emio",
                 legsName=["blueleg"],
                 legsModel=["tetra"],
@@ -59,28 +97,23 @@ def createScene(rootnode):
     emio.effector.addObject("MechanicalObject", template="Rigid3", position=[0, 0, 0, 0, 0, 0, 1])
     emio.effector.addObject("RigidMapping", index=0)
 
-    # Target
-    effectorTarget = modelling.addChild('Target')
-    effectorTarget.addObject('EulerImplicitSolver', firstOrder=True)
-    effectorTarget.addObject('CGLinearSolver', iterations=50, tolerance=1e-10, threshold=1e-10)
-    effectorTarget.addObject('MechanicalObject', template='Rigid3',
-                             position=[0, -150, 0, 0, 0, 0, 1],
-                             showObject=True, showObjectScale=20)
-
     # Inverse components and GUI
-    emio.addInverseComponentAndGUI(effectorTarget.getMechanicalState().position.linkpath)
+    emio.addInverseComponentAndGUI([0, 0, 0, 0, 0, 0, 1], withGUI=False)
+    emio.effector.EffectorCoord.maxSpeed.value = 50 # Limit the speed of the effector's motion
 
     # Components for the connection to the real robot 
     emio.addConnectionComponents()
 
-    # cubePositions = Targets(ratio=0.1, center=[0,-150,0], size=50).cube()
-    # cube = modelling.addChild("CubeTargets")
-    # cube.addObject("MechanicalObject", position=cubePositions, showObject=True, showObjectScale=10, drawMode=0)
-
-    spherePositions = Targets(ratio=0.1, center=[0,-150,0], size=50).sphere()
+    # Generation of the targets
+    spherePositions = Targets(ratio=0.1, center=[0, -130, 0], size=80).sphere()
     sphere = modelling.addChild("SphereTargets")
     sphere.addObject("MechanicalObject", position=spherePositions, showObject=True, showObjectScale=10, drawMode=0)
 
-    rootnode.addObject(TargetController(sphere, emio.effector.EffectorCoord, assembly))
+    # We add a controller to go through the targets
+    rootnode.addObject(TargetController(emio=emio,
+                                        target=sphere, 
+                                        effector=emio.effector.EffectorCoord, 
+                                        assembly=assembly,
+                                        steps=100))
 
     return rootnode
