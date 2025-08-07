@@ -50,23 +50,34 @@ class TargetController(Sofa.Core.Controller):
                 self.animationStep = self.animationSteps
                 self.effector.effectorGoal = [list(self.targetsPosition[self.targetIndex]) + [0, 0, 0, 1]]
 
+    def getFilename(self):
+        legname = self.emio.legsName[0]
+        legmodel = self.emio.legsModel[0]
+        return resultsDirectory + legname + "_" + legmodel + '_sphere.csv'
+
     def createCSVFile(self):
         """
             Clear or create the csv file in which we'll save the data
         """
-        legname = self.emio.legsName[0]
-        with open(resultsDirectory+legname+'Sphere.csv', 'w', newline='') as csvfile:
-            spamwriter = csv.writer(csvfile, delimiter=';')
-            spamwriter.writerow(["Target", "Simulation", "DepthCamera", "Polhemus"])
+        with open(self.getFilename(), 'w', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile, delimiter=';')
+            csvwriter.writerow(["# extended ", self.emio.extended.value])
+            csvwriter.writerow(["# legs ", self.emio.legsName.value])
+            csvwriter.writerow(["# legs model ", self.emio.legsModel.value])
+            csvwriter.writerow(["# legs young modulus ", self.emio.legsYoungModulus.value])
+            csvwriter.writerow(["# legs poisson ratio ", self.emio.legsPoissonRatio.value])
+            csvwriter.writerow(["# legs position on motor ", self.emio.legsPositionOnMotor.value])
+            csvwriter.writerow(["# connector ", self.emio.centerPartName.value])
+            csvwriter.writerow(["# connector type ", self.emio.centerPartType.value])
+            csvwriter.writerow(["Target", "Simulation", "DepthCamera", "Polhemus"])
 
     def writeToCSVFile(self):
         """
             Save the data in a csv file
         """
-        legname = self.emio.legsName[0]
-        with open(resultsDirectory+legname+'Sphere.csv', 'a', newline='') as csvfile:
-            spamwriter = csv.writer(csvfile, delimiter=';')
-            spamwriter.writerow([self.targetsPosition[self.targetIndex], 
+        with open(self.getFilename(), 'a', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile, delimiter=';')
+            csvwriter.writerow([self.targetsPosition[self.targetIndex], 
                                  self.emio.effector.getMechanicalState().position.value[0][0:3],
                                  self.emio.getRoot().DepthCamera.getMechanicalState().position.value[0][0:3],
                                  [0., 0., 0.]]) # Todo: add polhemus position
