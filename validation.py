@@ -1,5 +1,6 @@
 
 from modules.targets import Targets
+from modules.polhemusUSB import PolhemusUSB
 import Sofa
 import csv
 import numpy as np
@@ -34,6 +35,8 @@ class TargetController(Sofa.Core.Controller):
         self.animationStep = self.animationSteps
         self.createCSVFile()
 
+        self.polhemus = PolhemusUSB()
+
     def onAnimateBeginEvent(self, _):
         """
             Change the target when it's time
@@ -43,6 +46,7 @@ class TargetController(Sofa.Core.Controller):
             self.firstTargetReached = True
 
         if self.assembly.done and self.firstTargetReached:
+            self.polhemus.UpdateSensors()
             self.animationStep -= 1
             if self.targetIndex >= 0 and self.animationStep == 0:
                 self.writeToCSVFile()
@@ -79,9 +83,8 @@ class TargetController(Sofa.Core.Controller):
             csvwriter = csv.writer(csvfile, delimiter=';')
             csvwriter.writerow([self.targetsPosition[self.targetIndex], 
                                  self.emio.effector.getMechanicalState().position.value[0][0:3],
-                                 self.emio.getRoot().DepthCamera.getMechanicalState().position.value[0][0:3],
-                                 [0., 0., 0.]]) # Todo: add polhemus position
-
+                                 [0, 0, 0],#  self.emio.getRoot().DepthCamera.getMechanicalState().position.value[0][0:3],
+                                 self.polhemus.sensors[0].GetLastPosition()])
 
 def createScene(rootnode):
     """
@@ -94,7 +97,7 @@ def createScene(rootnode):
 
     settings, modelling, simulation = addHeader(rootnode, inverse=True)
 
-    rootnode.dt = 0.01
+    rootnode.dt = 0.04
     rootnode.gravity = [0., -9810., 0.]
     addSolvers(simulation)
 
@@ -108,6 +111,10 @@ def createScene(rootnode):
                 extended=True)
     if not emio.isValid():
         return
+    
+    # get all legs and set yougModulus in TetrahedronFEMForceField
+    for leg in emio.legs:
+        leg.getChild(leg.name.value + "DeformablePart").Leg.getObject("TetrahedronFEMForceField").youngModulus.value = [7000.]
 
     simulation.addChild(emio)
     emio.attachCenterPartToLegs()
@@ -124,7 +131,7 @@ def createScene(rootnode):
     emio.effector.addObject("RigidMapping", index=0)
 
     # Inverse components and GUI
-    emio.addInverseComponentAndGUI(spherePositions[-1] + [0, 0, 0, 1], withGUI=False)
+    emio.addInverseComponentAndGUI(spherePositions[-1]+[0, 0, 0, 1], withGUI=False)
     emio.effector.EffectorCoord.maxSpeed.value = 100 # Limit the speed of the effector's motion
 
     # Components for the connection to the real robot 
@@ -135,14 +142,14 @@ def createScene(rootnode):
                                         target=sphere, 
                                         effector=emio.effector.EffectorCoord, 
                                         assembly=assembly,
-                                        steps=25))
+                                        steps=30))
     
     # Add depth camera tracker (distributed with Emio) 
-    rootnode.addObject(DotTracker(name="DotTracker",
-                                  root=rootnode,
-                                  configuration="extended",
-                                  nb_tracker=1, # We only look for one marker
-                                  show_video_feed=True,
-                                  track_colors=True)) # We track the color of the marker (green by default)
+    # rootnode.addObject(DotTracker(name="DotTracker",
+    #                               root=rootnode,
+    #                               configuration="extended",
+    #                               nb_tracker=1, # We only look for one marker
+    #                               show_video_feed=True,
+    #                               track_colors=True)) # We track the color of the marker (green by default)
 
     return rootnode

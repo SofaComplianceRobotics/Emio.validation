@@ -27,6 +27,9 @@ def plotPointClouds(clouds):
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     for cloud in clouds:
         plotPointCloud(ax, cloud)
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
     plt.show()
 
 
@@ -35,15 +38,15 @@ def plotPointCloud(ax, cloud):
 
 
 def main():
-    targets, simulations, camera, polhemus = loadPositions("data/results/blueleg_tetra_sphere.csv")
+    targets, simulations, camera, polhemus = loadPositions("data/results/blueleg_beam_polhemus_sphere.csv")
 
     plotPointClouds(clouds=[targets, simulations])
     print("[Target/Simulation] mean error:", getMeanError(targets, simulations))
     print("[Target/Simulation] std:", getErrorStandardDeviation(targets, simulations))
 
-    plotPointClouds(clouds=[targets, camera])
-    print("[Target/Camera] mean error:", getMeanError(targets, camera))
-    print("[Target/Camera] std:", getErrorStandardDeviation(targets, camera))
+    plotPointClouds(clouds=[targets, polhemus])
+    print("[Target/Camera] mean error:", getMeanError(targets, polhemus))
+    print("[Target/Camera] std:", getErrorStandardDeviation(targets, polhemus))
 
 
 if __name__ == "__main__":
