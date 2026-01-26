@@ -7,11 +7,11 @@ The validation workflow:
 2. We use the simulation to solve the inverse kinematics of Emio
 3. Emio's effector move to each target point, we wait a few moments, and take measurements from the real device
 4. The measurement results are then compared:    
-    - Error between the targets and the simulation results    
-    - Error between the targets and the polhemus results    
-    - Error between the targets and the camera results
+    - Error between the targets and the __simulation__ results    
+    - Error between the targets and the __polhemus__ results    
+    - Error between the targets and the __camera__ results
 
-**Note:** All measurements are in millimeters (mm).
+**Note:** All measurements are in millimeters (mm). This is an open-loop control system. 
 
 ![Simulation screenshot with the targets](data/images/validationSphere.png)
 ![Plots](data/images/plots.png)
