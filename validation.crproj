@@ -68,3 +68,79 @@ height = 577.000000
 [5]
 width = 2554.000000
 height = 1615.000000
+
+
+[Window.Viewport]
+cameraButtonsCollapsed = false
+orientationGizmoEnabled = true
+open = true
+dockId = 5
+
+
+[Window.Input/Output]
+open = false
+
+
+[Window.Program]
+open = false
+dockId = 6
+
+
+[Window.My Robot]
+open = false
+dockId = 4
+
+
+[Window.Move]
+open = false
+dockId = 3
+
+
+[Window.Plotting]
+open = false
+dockId = 6
+
+
+[Window.Scene Graph]
+open = false
+
+
+[Window.Components]
+open = false
+
+
+[Window.Log]
+open = false
+
+
+[Window.Profiler]
+open = false
+
+
+[Window.2]
+width = 1229.000000
+height = 1966.000000
+
+
+[Window.4]
+width = 1229.000000
+height = 884.000000
+
+
+[Window.3]
+width = 1229.000000
+height = 1966.000000
+
+
+[Window.6]
+width = 2589.000000
+height = 690.000000
+
+
+[Window.5]
+width = 3820.000000
+height = 1966.000000
+
+
+[Workbench]
+type = 2

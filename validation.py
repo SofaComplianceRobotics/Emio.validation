@@ -1,12 +1,12 @@
 
 from modules.targets import Targets
-from modules.polhemusUSB import PolhemusUSB
 import Sofa
 import csv
 import numpy as np
 
 resultsDirectory = "data/results/"
-
+WITH_POLHEMUS = False
+WITH_CAMERA = False
 
 class TargetController(Sofa.Core.Controller):
     """
@@ -35,7 +35,9 @@ class TargetController(Sofa.Core.Controller):
         self.animationStep = self.animationSteps
         self.createCSVFile()
 
-        self.polhemus = PolhemusUSB()
+        if WITH_POLHEMUS:
+            from modules.polhemusUSB import PolhemusUSB
+            self.polhemus = PolhemusUSB()
 
     def onAnimateBeginEvent(self, _):
         """
@@ -46,7 +48,10 @@ class TargetController(Sofa.Core.Controller):
             self.firstTargetReached = True
 
         if self.assembly.done and self.firstTargetReached:
-            self.polhemus.UpdateSensors()
+
+            if WITH_POLHEMUS:
+                self.polhemus.UpdateSensors()
+
             self.animationStep -= 1
             if self.targetIndex >= 0 and self.animationStep == 0:
                 self.writeToCSVFile()
@@ -83,8 +88,8 @@ class TargetController(Sofa.Core.Controller):
             csvwriter = csv.writer(csvfile, delimiter=';')
             csvwriter.writerow([self.targetsPosition[self.targetIndex], 
                                  self.emio.effector.getMechanicalState().position.value[0][0:3],
-                                 [0, 0, 0],#  self.emio.getRoot().DepthCamera.getMechanicalState().position.value[0][0:3],
-                                 self.polhemus.sensors[0].GetLastPosition()])
+                                 self.emio.getRoot().DepthCamera.getMechanicalState().position.value[0][0:3] if WITH_CAMERA else [0, 0, 0],
+                                 self.polhemus.sensors[0].GetLastPosition() if WITH_POLHEMUS else [0, 0, 0]])
 
 def createScene(rootnode):
     """
@@ -144,12 +149,13 @@ def createScene(rootnode):
                                         assembly=assembly,
                                         steps=30))
     
-    # Add depth camera tracker (distributed with Emio) 
-    # rootnode.addObject(DotTracker(name="DotTracker",
-    #                               root=rootnode,
-    #                               configuration="extended",
-    #                               nb_tracker=1, # We only look for one marker
-    #                               show_video_feed=True,
-    #                               track_colors=True)) # We track the color of the marker (green by default)
+    if WITH_CAMERA:
+        # Add depth camera tracker (distributed with Emio) 
+        rootnode.addObject(DotTracker(name="DotTracker",
+                                    root=rootnode,
+                                    configuration="extended",
+                                    nb_tracker=1, # We only look for one marker
+                                    show_video_feed=True,
+                                    track_colors=True)) # We track the color of the marker (green by default)
 
     return rootnode
