@@ -8,7 +8,7 @@ This repository contains validation tools for [Emio](https://compliance-robotics
 
 1. Target points are generated from a script (e.g. sphere points cloud)
 2. We use the simulation to solve the inverse kinematics of Emio
-3. Emio's effector move to each target point, we wait a few moments, and take measurements from the real device
+3. Emio's effector moves to each target point, we wait a few moments, and take measurements from the real device
 4. The measurement results are then compared:    
     - Error between the targets and the __simulation__ results    
     - Error between the targets and the __polhemus__ results    
