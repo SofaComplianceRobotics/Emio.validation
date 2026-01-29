@@ -50,7 +50,8 @@ def plotPointCloudInAxis(ax, cloud, target, label):
     
     # Plot with color gradient
     cmap = plt.cm.RdYlGn_r  # Red (high error) to Green (low error)
-    norm = Normalize(vmin=np.min(errors), vmax=np.max(errors))
+    # norm = Normalize(vmin=np.min(errors), vmax=np.max(errors))
+    norm = Normalize(vmin=0, vmax=12)
     colors = cmap(norm(errors))
     
     scatter = ax.scatter(cloud[:, 0], cloud[:, 2], cloud[:, 1], c=colors, s=20)
@@ -90,7 +91,8 @@ def main():
         subplot_index += 1
     
     # Plot Polhemus data for different models
-    for model in ["tetra", "beam", "cosserat"]:
+    # for model in ["tetra", "beam", "cosserat"]:
+    for model in ["beam"]:
         target, _, _, polhemus = loadPositions("data/results/blueleg_"+model+"_polhemus_sphere.csv")
         ax = fig.add_subplot(3, 3, subplot_index, projection="3d")
         plotPointCloudInAxis(ax, polhemus, targets, f"Polhemus ({model})")
