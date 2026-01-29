@@ -51,7 +51,7 @@ def plotPointCloudInAxis(ax, cloud, target, label):
     # Plot with color gradient
     cmap = plt.cm.RdYlGn_r  # Red (high error) to Green (low error)
     # norm = Normalize(vmin=np.min(errors), vmax=np.max(errors))
-    norm = Normalize(vmin=0, vmax=12)
+    norm = Normalize(vmin=0, vmax=13) # corresponds to the max error of all graphs
     colors = cmap(norm(errors))
     
     scatter = ax.scatter(cloud[:, 0], cloud[:, 2], cloud[:, 1], c=colors, s=20)
