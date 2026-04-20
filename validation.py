@@ -95,10 +95,10 @@ def createScene(rootnode):
     """
         Emio simulation
     """
-    from utils.header import addHeader, addSolvers
-    from parts.controllers.assemblycontroller import AssemblyController
-    from parts.controllers.trackercontroller import DotTracker
-    from parts.emio import Emio
+    from emio.utils.header import addHeader, addSolvers
+    from emio.parts.controllers.assemblycontroller import AssemblyController
+    from emio.parts.controllers.trackercontroller import DotTracker
+    from emio import Emio
 
     settings, modelling, simulation = addHeader(rootnode, inverse=True)
 
