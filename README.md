@@ -22,6 +22,10 @@ This repository contains validation tools for [Emio](https://compliance-robotics
 - `validation.py`: SOFA simulation of Emio with inverse kinematics, the effector moves to generated target points, waits, and triggers measurements
 - `data/results`: directory containing the collected positions
 
+## How to run the simulation
+
+In a terminal, follow the [instructions](https://docs-support.compliance-robotics.com/docs/next/Developers/sofa-robotics-without-emio-labs/) and run the following command: `runSofa -lSofaPython3,SofaImGui validation.py`
+
 ## Simulation Screenshot
 
 ![Simulation screenshot with the targets](data/images/validationSphere.png)
