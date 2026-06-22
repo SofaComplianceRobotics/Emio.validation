@@ -24,7 +24,7 @@ This repository contains validation tools for [Emio](https://compliance-robotics
 
 ## How to run the simulation
 
-In a terminal, follow the [instructions](https://docs-support.compliance-robotics.com/docs/next/Developers/sofa-robotics-without-emio-labs/) and run the following command: `runSofa -lSofaPython3,SofaImGui validation.py`
+In a terminal, follow the [instructions](https://docs-support.compliance-robotics.com/docs/v26.06/Developers/sofa-robotics-without-emio-labs/) and run the following command: `runSofa -lSofaPython3,SofaImGui validation.py`
 
 ## Simulation Screenshot
 
