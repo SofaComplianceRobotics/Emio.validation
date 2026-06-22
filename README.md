@@ -16,10 +16,10 @@ This repository contains validation tools for [Emio](https://compliance-robotics
   
 ## Repository Description
 
-- `modules/targets.py`: generate targets for Emio
-- `modules/measurements.py`: script used to generate the image `data/images/plots.png`
-- `modules/polhemusUSB.py`: utils to use the Polhemus sensor device 
-- `validation.py`: simulation of Emio with inverse kinematics, the effector moves to generated target points, waits, and triggers measurements
+- `modules/targets.py`: Python script to generate targets for Emio
+- `modules/measurements.py`: Python script used to generate the image `data/images/plots.png`
+- `modules/polhemusUSB.py`: Python scripit to use the Polhemus sensor device 
+- `validation.py`: SOFA simulation of Emio with inverse kinematics, the effector moves to generated target points, waits, and triggers measurements
 - `data/results`: directory containing the collected positions
 
 ## Simulation Screenshot
